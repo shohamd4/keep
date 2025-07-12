@@ -161,9 +161,7 @@ const DraggableHeaderCell = ({
         ? "32px !important"
         : column.id === "source"
           ? "40px !important"
-          : column.id === "status"
-            ? "24px !important"
-            : column.getSize(),
+          : column.getSize(),
     opacity: isDragging ? 0.5 : 1,
     transform: CSS.Translate.toString(transform),
     transition,
@@ -179,7 +177,6 @@ const DraggableHeaderCell = ({
   const shouldShowMenu =
     column.id !== "checkbox" &&
     column.id !== "source" &&
-    column.id !== "status" &&
     column.id !== "severity" &&
     column.id !== "alertMenu";
 

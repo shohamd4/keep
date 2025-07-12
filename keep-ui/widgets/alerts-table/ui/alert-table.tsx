@@ -266,8 +266,8 @@ export function AlertTable({
   }, [alerts, facetFilters, selectedTab, tabs]);
 
   const leftPinnedColumns = noisyAlertsEnabled
-    ? ["severity", "checkbox", "status", "source", "name", "noise"]
-    : ["severity", "checkbox", "status", "source", "name"];
+    ? ["severity", "checkbox", "source", "name", "noise"]
+    : ["severity", "checkbox", "source", "name"];
 
   const table = useReactTable({
     getRowId: (row) => row.fingerprint,
@@ -305,6 +305,23 @@ export function AlertTable({
     enableGrouping: true,
     onGroupingChange: setGrouping,
   });
+
+  // Debug: Print status column properties
+  const statusCol = table.getColumn("status");
+  console.log("Status column debug:", {
+    id: statusCol?.id,
+    isPinned: statusCol?.getIsPinned(),
+    canPin: statusCol?.getCanPin?.(),
+    getIsVisible: statusCol?.getIsVisible?.(),
+    getCanResize: statusCol?.getCanResize?.(),
+    getSize: statusCol?.getSize?.(),
+    columnDef: statusCol?.columnDef,
+  });
+
+  // Force unpin 'status' column if it exists
+  if (statusCol?.getIsPinned() !== false) {
+    statusCol?.pin(false);
+  }
 
   const selectedAlertsFingerprints = Object.keys(
     table.getSelectedRowModel().rowsById

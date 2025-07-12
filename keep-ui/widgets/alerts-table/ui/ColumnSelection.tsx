@@ -21,6 +21,9 @@ export default function ColumnSelection({
 }: AlertColumnsSelectProps) {
   const tableColumns = table.getAllColumns();
 
+  // Debug: Log all column IDs available to the picker
+  console.log('ColumnSelection: all column IDs', tableColumns.map(col => col.id));
+
   // Use the unified column state hook - it will automatically determine
   // whether to use backend or local storage based on preset type
   const {

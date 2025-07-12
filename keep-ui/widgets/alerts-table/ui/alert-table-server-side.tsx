@@ -238,8 +238,8 @@ export function AlertTableServerSide({
     useState<boolean>(false);
 
   const leftPinnedColumns = noisyAlertsEnabled
-    ? ["severity", "checkbox", "status", "source", "noise"]
-    : ["severity", "checkbox", "status", "source"];
+    ? ["severity", "checkbox", "source", "noise"]
+    : ["severity", "checkbox", "source"];
 
   const isShiftPressed = useIsShiftKeyHeld();
 
@@ -283,6 +283,23 @@ export function AlertTableServerSide({
     onGroupingChange: setGrouping,
     isMultiSortEvent: () => isShiftPressed,
   });
+
+  // Debug: Print status column properties
+  const statusCol = table.getColumn("status");
+  console.log("Status column debug:", {
+    id: statusCol?.id,
+    isPinned: statusCol?.getIsPinned(),
+    canPin: statusCol?.getCanPin?.(),
+    getIsVisible: statusCol?.getIsVisible?.(),
+    getCanResize: statusCol?.getCanResize?.(),
+    getSize: statusCol?.getSize?.(),
+    columnDef: statusCol?.columnDef,
+  });
+
+  // Force unpin 'status' column if it exists
+  if (statusCol?.getIsPinned() !== false) {
+    statusCol?.pin(false);
+  }
 
   // When filterCel or searchCel changes, we need to reset pagination state offset to 0
   useEffect(

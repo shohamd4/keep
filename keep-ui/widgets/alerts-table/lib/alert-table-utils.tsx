@@ -443,13 +443,20 @@ export const useAlertTableCols = (
       : []),
     columnHelper.accessor("status", {
       id: "status",
-      header: () => <></>, // Empty header like source column
+      header: ({ column }) => (
+        <div className="flex items-center gap-1 cursor-pointer select-none" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}> 
+          <span>Status</span>
+          {column.getIsSorted() === "asc" && <span>▲</span>}
+          {column.getIsSorted() === "desc" && <span>▼</span>}
+        </div>
+      ),
       enableGrouping: true,
+      enableSorting: true,
       getGroupingValue: (row) => row.status,
-      maxSize: 16,
-      minSize: 16,
-      size: 16,
-      enableResizing: false,
+      minSize: 60,
+      maxSize: 120,
+      size: 80,
+      enableResizing: true,
       cell: (context) => (
         <div className="flex items-center justify-center">
           <Icon
@@ -462,8 +469,8 @@ export const useAlertTableCols = (
         </div>
       ),
       meta: {
-        tdClassName: "!p-0 w-4 sm:w-8 !box-border", // Same styling as source
-        thClassName: "!p-0 w-4 sm:w-8 !box-border",
+        tdClassName: "!box-border w-20",
+        thClassName: "!box-border w-20",
       },
     }),
     // Source column with exact 40px width ( see alert-table-headers )
