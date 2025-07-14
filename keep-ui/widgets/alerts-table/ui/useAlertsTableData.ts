@@ -1,6 +1,7 @@
 import { TimeFrameV2 } from "@/components/ui/DateRangePickerV2";
 import { AlertDto, AlertsQuery, useAlerts } from "@/entities/alerts/model";
 import { useAlertPolling } from "@/utils/hooks/useAlertPolling";
+import { useWebsocket } from "@/utils/hooks/usePusher";
 import { v4 as uuidv4 } from "uuid";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -34,6 +35,7 @@ function getDateRangeCel(timeFrame: TimeFrameV2 | null): string | null {
 
 export const useAlertsTableData = (query: AlertsTableDataQuery | undefined) => {
   const { useLastAlerts } = useAlerts();
+  const { bind, unbind } = useWebsocket();
   const [shouldRefreshDate, setShouldRefreshDate] = useState<boolean>(false);
 
   const [canRevalidate, setCanRevalidate] = useState<boolean>(false);
@@ -200,6 +202,17 @@ export const useAlertsTableData = (query: AlertsTableDataQuery | undefined) => {
 
     setAlertsToReturn(alertsLoading ? undefined : alerts);
   }, [isPaused, alertsLoading, alerts]);
+
+  useEffect(() => {
+    // Subscribe to alert_update WebSocket event for real-time updates
+    const handleAlertUpdate = (msg: any) => {
+      mutateAlerts();
+    };
+    bind && bind("alert_update", handleAlertUpdate);
+    return () => {
+      unbind && unbind("alert_update", handleAlertUpdate);
+    };
+  }, [bind, unbind, mutateAlerts]);
 
   return {
     alerts: alertsToReturn,

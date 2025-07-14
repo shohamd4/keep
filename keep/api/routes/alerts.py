@@ -1427,6 +1427,24 @@ def dismiss_error_alerts(
             dismissed_by=authenticated_entity.email,
         )
 
+        # Publish alert_update event to all clients
+        pusher_client = get_pusher_client()
+        if pusher_client and alert_id:
+            payload = {
+                "type": "alert_update",
+                "id": alert_id,
+                "status": "suppressed",
+                "dismissed_until": None  # Update if you have this info
+            }
+            try:
+                pusher_client.trigger(
+                    f"private-{tenant_id}",
+                    "alert_update",
+                    payload
+                )
+            except Exception as e:
+                logger.error(f"Failed to publish alert_update event: {e}")
+
         logger.info(
             "Successfully dismissed an error alert",
             extra={

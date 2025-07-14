@@ -1,0 +1,75 @@
+# PRD: Real-Time Alert Dismiss Sync (GitHub Issue #5146)
+
+## 1. What is broken
+When you dismiss an alert in one browser window, other open windows keep showing that alert as Firing until the user clicks or reloads. The issue is documented in GitHub issue #5146.
+
+## 2. Why it happens
+Keep’s UI relies on a WebSocket layer to push real-time changes from the backend. The current dismiss flow updates the database and the local React query/SWR cache in the tab that performed the action, but does not broadcast an “alert-updated” event over the WebSocket (or any other cross-tab channel). Other tabs therefore sit on stale data until they make their own API call.
+
+## 3. Fix in two layers
+### A. Backend: publish an alert_update event
+After the dismiss RPC finishes, publish a message on the existing pub-sub bus (FastAPI WebSocket PubSub is already bundled with Keep).
+
+**Suggested payload:**
+```json
+{
+  "type": "alert_update",
+  "id": "<alert-uuid>",
+  "status": "suppressed",   // or resolved
+  "dismissed_until": "<ISO-8601 or null>"
+}
+```
+Reuse Redis/broadcaster so all running backend pods send the event to every connected WebSocket client.
+
+### B. Frontend: listen and mutate cache
+In the alerts feed hook (e.g., useAlertsFeed.ts), register once:
+```ts
+useEffect(() => {
+  socket.subscribe('alert_update', (msg) => {
+    mutateAlertsFeed((old) =>
+      old?.map((a) =>
+        a.id === msg.id ? { ...a, status: msg.status } : a
+      )
+    )
+  })
+}, [])
+```
+For performance, debounce bulk events or batch updates if many alerts change.
+
+### C. Bonus: intra-tab BroadcastChannel
+If you want to avoid a round trip altogether, add:
+```ts
+const bc = new BroadcastChannel('keep-alert-updates')
+bc.onmessage = ({ data }) => handleUpdate(data)
+...
+onDismissClick = async (ids) => {
+  await api.dismiss(ids)
+  bc.postMessage({ type: 'alert_update', ids, status: 'suppressed' })
+}
+```
+This instantly syncs multiple tabs even if WebSockets are misconfigured, but still falls back to the server event.
+
+## 4. Implementation steps
+### Backend
+- `alerts/service.py`: after successful dismiss, call pubsub_endpoint.publish('alert_update', payload).
+- Ensure the endpoint is created once during application startup and reused.
+- Add unit test: dismiss via API, assert a mock subscriber receives correct payload.
+
+### Frontend
+- Add useWebSocket utility that exposes .subscribe(topic, cb).
+- Hook into alerts feed and incidents pages; update SWR/React-Query cache.
+- Add Cypress test: open two browser contexts, dismiss in one, check status in the other without refresh.
+
+### Docs
+- Release notes: “0.45.10 – real-time cross-tab sync for alert dismiss”.
+
+## 5. Roll-out & fallback
+- Ship behind feature flag REALTIME_ALERT_UPDATES; enable in staging.
+- Monitor WebSocket error logs and memory usage.
+- If problems arise, keep the current polling-on-interaction as a safety net.
+
+## 6. Expected result
+- Dismiss action propagates in under 100 ms to every open Keep session.
+- No extra database load; only one small WebSocket broadcast.
+- Users no longer perform redundant dismiss actions or see inconsistent alert states.
+- This approach keeps the change minimal, fits the existing architecture, and adds an extra client-side channel for robustness.

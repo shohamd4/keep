@@ -1,0 +1,218 @@
+{
+  "name": "Keep AIOps Platform",
+  "description": "Open-source AIOps and alert management platform",
+  "version": "1.0.0",
+  "tasks": {
+    "setup": {
+      "description": "Initial project setup and dependencies installation",
+      "commands": [
+        {
+          "name": "Install Python dependencies",
+          "command": "poetry install",
+          "cwd": "."
+        },
+        {
+          "name": "Install UI dependencies",
+          "command": "npm install",
+          "cwd": "keep-ui"
+        },
+        {
+          "name": "Create state directory",
+          "command": "mkdir -p state && chmod -R 0777 state"
+        }
+      ]
+    },
+    "dev": {
+      "description": "Start development environment",
+      "commands": [
+        {
+          "name": "Start Keep with Docker Compose",
+          "command": "docker compose up -d",
+          "description": "Starts Keep backend, frontend, and websocket server"
+        },
+        {
+          "name": "Start UI development server",
+          "command": "npm run dev",
+          "cwd": "keep-ui",
+          "description": "Starts Next.js development server for the UI"
+        }
+      ]
+    },
+    "test": {
+      "description": "Run tests",
+      "commands": [
+        {
+          "name": "Run Python tests",
+          "command": "poetry run pytest",
+          "description": "Run all Python tests"
+        },
+        {
+          "name": "Run UI tests",
+          "command": "npm run test",
+          "cwd": "keep-ui",
+          "description": "Run React/TypeScript tests"
+        },
+        {
+          "name": "Run UI tests with coverage",
+          "command": "npm run test:coverage",
+          "cwd": "keep-ui",
+          "description": "Run tests with coverage report"
+        }
+      ]
+    },
+    "lint": {
+      "description": "Run linting and code formatting",
+      "commands": [
+        {
+          "name": "Format Python code",
+          "command": "poetry run black . && poetry run isort .",
+          "description": "Format Python code with black and isort"
+        },
+        {
+          "name": "Lint Python code",
+          "command": "poetry run ruff check .",
+          "description": "Run ruff linter on Python code"
+        },
+        {
+          "name": "Lint UI code",
+          "command": "npm run lint",
+          "cwd": "keep-ui",
+          "description": "Run ESLint on TypeScript/React code"
+        },
+        {
+          "name": "Format UI code",
+          "command": "npm run format",
+          "cwd": "keep-ui",
+          "description": "Format TypeScript/React code with Prettier"
+        }
+      ]
+    },
+    "build": {
+      "description": "Build the project",
+      "commands": [
+        {
+          "name": "Build UI",
+          "command": "npm run build",
+          "cwd": "keep-ui",
+          "description": "Build the Next.js application"
+        },
+        {
+          "name": "Build Docker images",
+          "command": "docker compose build",
+          "description": "Build all Docker images"
+        }
+      ]
+    },
+    "deploy": {
+      "description": "Deploy the application",
+      "commands": [
+        {
+          "name": "Deploy with Docker Compose",
+          "command": "docker compose up -d",
+          "description": "Deploy Keep using Docker Compose"
+        },
+        {
+          "name": "Deploy with Grafana monitoring",
+          "command": "docker compose --profile grafana up -d",
+          "description": "Deploy Keep with Grafana and Prometheus monitoring"
+        }
+      ]
+    },
+    "clean": {
+      "description": "Clean up development artifacts",
+      "commands": [
+        {
+          "name": "Stop and remove containers",
+          "command": "docker compose down",
+          "description": "Stop and remove all containers"
+        },
+        {
+          "name": "Clean Docker volumes",
+          "command": "docker compose down -v",
+          "description": "Stop containers and remove volumes"
+        },
+        {
+          "name": "Clean Python cache",
+          "command": "find . -type d -name __pycache__ -delete && find . -type f -name '*.pyc' -delete",
+          "description": "Remove Python cache files"
+        },
+        {
+          "name": "Clean node modules",
+          "command": "rm -rf keep-ui/node_modules keep-ui/.next",
+          "cwd": "keep-ui",
+          "description": "Remove node_modules and Next.js build cache"
+        }
+      ]
+    },
+    "docs": {
+      "description": "Generate and serve documentation",
+      "commands": [
+        {
+          "name": "Start documentation server",
+          "command": "cd docs && python -m http.server 8000",
+          "description": "Serve documentation on http://localhost:8000"
+        }
+      ]
+    },
+    "monitoring": {
+      "description": "Start monitoring stack",
+      "commands": [
+        {
+          "name": "Start Grafana and Prometheus",
+          "command": "docker compose --profile grafana up -d",
+          "description": "Start monitoring stack with Grafana and Prometheus"
+        }
+      ]
+    },
+    "logs": {
+      "description": "View application logs",
+      "commands": [
+        {
+          "name": "View all logs",
+          "command": "docker compose logs -f",
+          "description": "Follow logs from all services"
+        },
+        {
+          "name": "View backend logs",
+          "command": "docker compose logs -f keep-backend",
+          "description": "Follow backend logs"
+        },
+        {
+          "name": "View frontend logs",
+          "command": "docker compose logs -f keep-frontend",
+          "description": "Follow frontend logs"
+        }
+      ]
+    }
+  },
+  "environments": {
+    "development": {
+      "description": "Development environment",
+      "env": {
+        "AUTH_TYPE": "NO_AUTH",
+        "KEEP_METRICS": "true"
+      }
+    },
+    "production": {
+      "description": "Production environment",
+      "env": {
+        "AUTH_TYPE": "KEYCLOAK",
+        "KEEP_METRICS": "true"
+      }
+    }
+  },
+  "scripts": {
+    "quick-start": [
+      "taskmaster run setup",
+      "taskmaster run dev"
+    ],
+    "full-test": [
+      "taskmaster run lint",
+      "taskmaster run test"
+    ],
+    "production-deploy": [
+      "taskmaster run build",
+      "taskmaster run deploy"
+    ]
+  }
+} 
