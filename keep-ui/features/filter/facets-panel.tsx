@@ -7,10 +7,12 @@ import {
   FacetsConfig,
 } from "./models";
 import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { TbChevronCompactLeft, TbChevronCompactRight } from "react-icons/tb";
 import "react-loading-skeleton/dist/skeleton.css";
 import clsx from "clsx";
 import { FacetStoreProvider, useFacetsConfig, useNewFacetStore } from "./store";
 import { useStore } from "zustand";
+import { useLocalStorage } from "@/utils/hooks/useLocalStorage";
 
 export interface FacetsPanelProps {
   panelId: string;
@@ -54,6 +56,11 @@ export const FacetsPanel: React.FC<FacetsPanelProps> = ({
   onLoadFacetOptions = undefined,
   onReloadFacetOptions = undefined,
 }) => {
+  const [isCollapsed, setIsCollapsed] = useLocalStorage(
+    "facets-panel-collapsed",
+    false
+  );
+
   const facetOptionsRef = useRef<Record<string, FacetOptionDto[]>>(facetOptions);
   facetOptionsRef.current = facetOptions;
   const onCelChangeRef = useRef(onCelChange);
@@ -104,56 +111,80 @@ export const FacetsPanel: React.FC<FacetsPanelProps> = ({
   return (
     <section
       id={`${panelId}-facets`}
-      className={clsx("w-48 lg:w-56", className)}
+      className={clsx(
+        "transition-all duration-200 ease-in-out overflow-hidden",
+        isCollapsed ? "w-8" : "w-48 lg:w-56",
+        className
+      )}
       data-testid="facets-panel"
+      data-collapsed={isCollapsed}
     >
-      <div className="space-y-2">
-        <div className="flex justify-between">
-          {/* Facet button */}
-          <button
-            onClick={() => onAddFacet && onAddFacet()}
-            className="p-1 pr-2 text-sm text-gray-600 hover:bg-gray-100 rounded flex items-center gap-1"
-          >
-            <PlusIcon className="h-4 w-4" />
-            Add Facet
-          </button>
-          <button
-            onClick={() => clearFilters()}
-            className="p-1 pr-2 text-sm text-gray-600 hover:bg-gray-100 rounded flex items-center gap-1"
-          >
-            <XMarkIcon className="h-4 w-4" />
-            Reset
-          </button>
-        </div>
-        <FacetStoreProvider store={store}>
-          {!facets &&
-            [undefined, undefined, undefined].map((_, index) => (
-              <Facet
-                facet={
-                  {
-                    id: index.toString(),
-                    name: "",
-                    is_static: true,
-                  } as FacetDto
-                }
-                key={index}
-                isOpenByDefault={true}
-              />
-            ))}
-          {facets &&
-            facets.map((facet, index) => (
-              <Facet
-                key={facet.id}
-                facet={facet}
-                options={facetOptions?.[facet.id]}
-                onLoadOptions={() =>
-                  onLoadFacetOptions && onLoadFacetOptions(facet.id)
-                }
-                onDelete={() => onDeleteFacet && onDeleteFacet(facet.id)}
-              />
-            ))}
-        </FacetStoreProvider>
+      {/* Toggle button */}
+      <div className="flex justify-start mb-2">
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="p-1 text-gray-600 hover:bg-gray-100 rounded flex items-center justify-center"
+          title={isCollapsed ? "Expand filters panel" : "Collapse filters panel"}
+          aria-label={isCollapsed ? "Expand filters panel" : "Collapse filters panel"}
+        >
+          {isCollapsed ? (
+            <TbChevronCompactRight className="h-4 w-4" />
+          ) : (
+            <TbChevronCompactLeft className="h-4 w-4" />
+          )}
+        </button>
       </div>
+
+      {/* Panel content - hidden when collapsed */}
+      {!isCollapsed && (
+        <div className="space-y-2">
+          <div className="flex justify-between">
+            {/* Facet button */}
+            <button
+              onClick={() => onAddFacet && onAddFacet()}
+              className="p-1 pr-2 text-sm text-gray-600 hover:bg-gray-100 rounded flex items-center gap-1"
+            >
+              <PlusIcon className="h-4 w-4" />
+              Add Facet
+            </button>
+            <button
+              onClick={() => clearFilters()}
+              className="p-1 pr-2 text-sm text-gray-600 hover:bg-gray-100 rounded flex items-center gap-1"
+            >
+              <XMarkIcon className="h-4 w-4" />
+              Reset
+            </button>
+          </div>
+          <FacetStoreProvider store={store}>
+            {!facets &&
+              [undefined, undefined, undefined].map((_, index) => (
+                <Facet
+                  facet={
+                    {
+                      id: index.toString(),
+                      name: "",
+                      is_static: true,
+                    } as FacetDto
+                  }
+                  key={index}
+                  isOpenByDefault={true}
+                />
+              ))}
+            {facets &&
+              facets.map((facet, index) => (
+                <Facet
+                  key={facet.id}
+                  facet={facet}
+                  options={facetOptions?.[facet.id]}
+                  onLoadOptions={() =>
+                    onLoadFacetOptions && onLoadFacetOptions(facet.id)
+                  }
+                  onDelete={() => onDeleteFacet && onDeleteFacet(facet.id)}
+                />
+              ))}
+          </FacetStoreProvider>
+        </div>
+      )}
     </section>
   );
 };

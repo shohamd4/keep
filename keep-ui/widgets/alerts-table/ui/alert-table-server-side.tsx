@@ -728,7 +728,7 @@ export function AlertTableServerSide({
       <div className="pb-4">
         <div className="flex gap-4">
           {/* Facets sidebar */}
-          <div className="w-33 min-w-[12rem] overflow-y-auto">
+          <div className="flex-shrink-0 overflow-y-auto">
             <FacetsPanelServerSide
               usePropertyPathsSuggestions={true}
               entityName={"alerts"}

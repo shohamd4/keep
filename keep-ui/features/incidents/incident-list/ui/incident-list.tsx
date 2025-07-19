@@ -334,17 +334,19 @@ export function IncidentList({
             ) : null}
             {incidentsError ? null : (
               <div className="flex flex-row gap-5">
-                <FacetsPanelServerSide
-                  className="mt-14"
-                  entityName={"incidents"}
-                  facetsConfig={facetsConfig}
-                  facetOptionsCel={facetsCel}
-                  usePropertyPathsSuggestions={true}
-                  clearFiltersToken={clearFiltersToken}
-                  initialFacetsData={initialFacetsData}
-                  onCelChange={setFilterCel}
-                  revalidationToken={filterRevalidationToken}
-                />
+                <div className="flex-shrink-0">
+                  <FacetsPanelServerSide
+                    className="mt-14"
+                    entityName={"incidents"}
+                    facetsConfig={facetsConfig}
+                    facetOptionsCel={facetsCel}
+                    usePropertyPathsSuggestions={true}
+                    clearFiltersToken={clearFiltersToken}
+                    initialFacetsData={initialFacetsData}
+                    onCelChange={setFilterCel}
+                    revalidationToken={filterRevalidationToken}
+                  />
+                </div>
                 <div className="flex flex-col gap-5 flex-1 min-w-0">
                   {renderIncidents()}
                 </div>
