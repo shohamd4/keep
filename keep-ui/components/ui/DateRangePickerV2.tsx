@@ -208,6 +208,16 @@ export default function EnhancedDateRangePickerV2({
             }) as RelativeTimeFrame,
         },
         {
+          badge: "today",
+          label: "Today so far",
+          value: () =>
+            ({
+              type: "absolute",
+              start: new Date(new Date().setHours(0, 0, 0, 0)),
+              end: new Date(),
+            }) as AbsoluteTimeFrame,
+        },
+        {
           badge: "all",
           label: "All time",
           value: () =>
